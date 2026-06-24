@@ -4,9 +4,7 @@ A clean, cross-platform status line for [Claude Code](https://claude.com/claude-
 
 At a glance it shows **who you're logged in as, the model, where you are, your git branch, and any persistent skills/modes that are currently active** — each as a bracketed badge.
 
-```
-[you@example.com] [Opus 4.8] [my-project] [main*] [Ponytail]
-```
+![claude-code-statusline](screenshot.png)
 
 ## Install
 
