@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-code-statusline",
+  "description": "A clean, cross-platform status line for Claude Code.",
+  "owner": {
+    "name": "spiegel",
+    "url": "https://gitlab.com/spiegel"
+  },
+  "plugins": [
+    {
+      "name": "claude-code-statusline",
+      "description": "Account, model, folder, git branch, and active skill badges. Auto-configures your statusLine on first session.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

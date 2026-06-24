@@ -1,0 +1,2 @@
+# This repo ships Markdown docs; un-ignore them in case a global gitignore drops *.md.
+!*.md
