@@ -17,8 +17,18 @@ if (Test-Path $cj) {
     if ($txt -match '"emailAddress"\s*:\s*"([^"]*)"') { $parts += Col 141 "[$($matches[1])]" }
 }
 
-# model
-if ($j.model.display_name) { $parts += Col 67 "[$($j.model.display_name)]" }
+# model (+ weekly usage % when available — Pro/Max, after first API response)
+if ($j.model.display_name) {
+    $name = $j.model.display_name
+    $wk = $j.rate_limits.seven_day.used_percentage
+    if ($null -ne $wk) {
+        $r = [math]::Round($wk, 1, [System.MidpointRounding]::AwayFromZero)
+        $c = if ($r -ge 80) { 196 } elseif ($r -ge 50) { 179 } else { 67 }
+        $parts += Col $c ("[{0}:{1:0.#}%]" -f $name, $r)
+    } else {
+        $parts += Col 67 "[$name]"
+    }
+}
 
 # current folder
 $dir = $j.workspace.current_dir; if (-not $dir) { $dir = $j.cwd }

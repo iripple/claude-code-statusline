@@ -15,9 +15,21 @@ titlecase() { printf '%s%s' "$(printf '%s' "${1:0:1}" | tr '[:lower:]' '[:upper:
 email="$(jget "$(cat "$HOME/.claude.json" 2>/dev/null)" emailAddress)"
 [ -n "$email" ] && parts+=("$(col 141 "[$email]")")
 
-# model
+# model (+ weekly usage % when available — Pro/Max, after first API response)
 model="$(jget "$json" display_name)"
-[ -n "$model" ] && parts+=("$(col 67 "[$model]")")
+if [ -n "$model" ]; then
+  # [^}]* keeps the match inside the seven_day object so we grab its used_percentage, not five_hour's
+  week="$(printf '%s' "$json" | sed -n 's/.*"seven_day"[^}]*"used_percentage"[[:space:]]*:[[:space:]]*\([0-9.]*\).*/\1/p')"
+  if [ -n "$week" ]; then
+    p="$(printf '%.1f' "$week")"
+    ci="${p%.*}"  # integer part for threshold compare
+    p="${p%.0}"   # drop trailing .0 — show decimal only when non-zero
+    c=67; [ "$ci" -ge 50 ] && c=179; [ "$ci" -ge 80 ] && c=196
+    parts+=("$(col "$c" "[$model:${p}%]")")
+  else
+    parts+=("$(col 67 "[$model]")")
+  fi
+fi
 
 # current folder
 dir="$(jget "$json" current_dir)"; [ -z "$dir" ] && dir="$(jget "$json" cwd)"
