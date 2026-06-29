@@ -15,20 +15,21 @@ titlecase() { printf '%s%s' "$(printf '%s' "${1:0:1}" | tr '[:lower:]' '[:upper:
 email="$(jget "$(cat "$HOME/.claude.json" 2>/dev/null)" emailAddress)"
 [ -n "$email" ] && parts+=("$(col 141 "[$email]")")
 
-# model (+ weekly usage % when available — Pro/Max, after first API response)
-model="$(jget "$json" display_name)"
+# model (+ 5-hour / weekly usage % when available — Pro/Max, after first API response)
+# [^}]* keeps each match inside its own window object so we grab the right used_percentage
+rlpct() { printf '%s' "$json" | sed -n "s/.*\"$1\"[^}]*\"used_percentage\"[[:space:]]*:[[:space:]]*\([0-9.]*\).*/\1/p"; }
+model="$(jget "$json" display_name)"; model="${model% (*}"  # drop trailing " (1M context)" etc.
 if [ -n "$model" ]; then
-  # [^}]* keeps the match inside the seven_day object so we grab its used_percentage, not five_hour's
-  week="$(printf '%s' "$json" | sed -n 's/.*"seven_day"[^}]*"used_percentage"[[:space:]]*:[[:space:]]*\([0-9.]*\).*/\1/p')"
-  if [ -n "$week" ]; then
-    p="$(printf '%.1f' "$week")"
-    ci="${p%.*}"  # integer part for threshold compare
-    p="${p%.0}"   # drop trailing .0 — show decimal only when non-zero
-    c=67; [ "$ci" -ge 50 ] && c=179; [ "$ci" -ge 80 ] && c=196
-    parts+=("$(col "$c" "[$model:${p}%]")")
-  else
-    parts+=("$(col 67 "[$model]")")
-  fi
+  u=""; mx=-1
+  for pair in "5h:$(rlpct five_hour)" "7d:$(rlpct seven_day)"; do
+    lbl="${pair%%:*}"; val="${pair#*:}"
+    [ -z "$val" ] && continue
+    f="$(printf '%.1f' "$val")"; ip="${f%.*}"; f="${f%.0}"  # round 1dp, keep int part, drop .0
+    u="$u $lbl:${f}%"
+    [ "$ip" -gt "$mx" ] && mx="$ip"
+  done
+  c=67; [ "$mx" -ge 50 ] && c=179; [ "$mx" -ge 80 ] && c=196
+  parts+=("$(col "$c" "[$model$u]")")
 fi
 
 # current folder

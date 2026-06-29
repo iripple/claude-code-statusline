@@ -17,17 +17,16 @@ if (Test-Path $cj) {
     if ($txt -match '"emailAddress"\s*:\s*"([^"]*)"') { $parts += Col 141 "[$($matches[1])]" }
 }
 
-# model (+ weekly usage % when available — Pro/Max, after first API response)
+# model (+ 5-hour / weekly usage % when available — Pro/Max, after first API response)
 if ($j.model.display_name) {
-    $name = $j.model.display_name
-    $wk = $j.rate_limits.seven_day.used_percentage
-    if ($null -ne $wk) {
-        $r = [math]::Round($wk, 1, [System.MidpointRounding]::AwayFromZero)
-        $c = if ($r -ge 80) { 196 } elseif ($r -ge 50) { 179 } else { 67 }
-        $parts += Col $c ("[{0}:{1:0.#}%]" -f $name, $r)
-    } else {
-        $parts += Col 67 "[$name]"
-    }
+    $name = $j.model.display_name -replace '\s*\([^)]*\)\s*$', ''
+    $h5 = $j.rate_limits.five_hour.used_percentage
+    $d7 = $j.rate_limits.seven_day.used_percentage
+    $u = ''; $mx = -1
+    if ($null -ne $h5) { $r = [math]::Round($h5, 1, [System.MidpointRounding]::AwayFromZero); $u += (' 5h:{0:0.#}%' -f $r); if ($r -gt $mx) { $mx = $r } }
+    if ($null -ne $d7) { $r = [math]::Round($d7, 1, [System.MidpointRounding]::AwayFromZero); $u += (' 7d:{0:0.#}%' -f $r); if ($r -gt $mx) { $mx = $r } }
+    $c = if ($mx -ge 80) { 196 } elseif ($mx -ge 50) { 179 } else { 67 }
+    $parts += Col $c "[$name$u]"
 }
 
 # current folder
